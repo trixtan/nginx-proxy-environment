@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+        nginx-proxy:
+                restart: always
+                image: jwilder/nginx-proxy
+                ports:
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        - "/etc/nginx/htpasswd:/etc/nginx/htpasswd"
+                        - "/etc/nginx/conf.d"
+                        - "/etc/nginx/vhost.d"
+                        - "/usr/share/nginx/html"
+                        - "./volumes/proxy/certs:/etc/nginx/certs:ro"
+                        - "/var/run/docker.sock:/tmp/docker.sock:ro"
+                networks:
+                        - proxy-tier
+                          
+        letsencrypt-nginx-proxy-companion:
+                restart: always
+                image: jrcs/letsencrypt-nginx-proxy-companion
+                volumes:
+                        - "/var/run/docker.sock:/var/run/docker.sock:ro"
+                        - "./volumes/proxy/certs:/etc/nginx/certs:rw"
+                volumes_from:
+                        - "nginx-proxy"
+
+networks:                         
+        proxy-tier:
+                external:
+                        name: nginx-proxy
